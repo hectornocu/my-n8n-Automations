@@ -1,0 +1,197 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "formTitle": "Nueva Automatizacion",
+        "formDescription": "Hola, necesito una nueva automatizacion de un proyecto ",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Nombre:",
+              "placeholder": "Cual es tu nombre",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Apellido:",
+              "placeholder": "Cual es tu apellido",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Presupuesto:",
+              "fieldType": "dropdown",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "<2000$"
+                  },
+                  {
+                    "option": "2000$-5000$"
+                  },
+                  {
+                    "option": ">5000$"
+                  }
+                ]
+              },
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "tipo de automatizacion que necesitas:",
+              "fieldType": "textarea",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Correo de contacto:",
+              "defaultValue": "ejemplo@gmail.com",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "appendAttribution": true
+        }
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        944,
+        -16
+      ],
+      "id": "e4beedc4-f2c3-4974-8ac0-ddc301125d02",
+      "name": "On form submission",
+      "webhookId": "3444a92c-4707-4f9c-90ac-900916168222"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Wait').item.json['Correo de contacto:'] }}",
+        "subject": "Reunión agendada con Hector",
+        "message": "={{ $json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1744,
+        -16
+      ],
+      "id": "ff4be962-9f33-41a4-99b4-4657cc4580dd",
+      "name": "Send a message",
+      "webhookId": "a2d5b559-c574-44a5-9f42-d42e47d90615",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7iVXiCjMkBPBlcu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        -16
+      ],
+      "id": "ac9d6532-ddb8-4913-9f1c-6373d238ef22",
+      "name": "Wait",
+      "webhookId": "9045eed1-8c47-409a-a2f1-4638a58f123b"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Nombre: {{ $json['Nombre:'] }}\nApellido: {{ $json['Apellido:'] }}\nPresupuesto: {{ $json['Presupuesto:'] }}\nNecesidad: {{ $json['tipo de automatizacion que necesitas:'] }}",
+        "options": {
+          "systemMessage": "Eres un asistente de redacción de correos electrónicos profesionales.\n\nTu tarea es crear un correo electrónico HTML persuasivo para agendar una reunión con un cliente potencial.\n\nInstrucciones:\n1. Saluda al cliente usando su nombre de forma personalizada\n2. Agradece su interés en nuestros servicios de automatización\n3. Crea un mensaje persuasivo relacionado con su necesidad específica\n4. Incluye el enlace de agendamiento: https://cal.com/hnogales/30min?overlayCalendar=true\n5. Despídete con \"Que tenga un buen día\"\n6. Usa formato HTML profesional con estilos inline\n7. Mantén un tono profesional pero cercano\n\nDevuelve SOLO el contenido HTML del correo, sin asunto ni encabezados adicionales."
+        }
+      },
+      "id": "a06c9cfa-9757-48ba-a045-8367562b31cf",
+      "name": "Generate Email Content",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1392,
+        -16
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "id": "f95cbd95-c059-4794-adcc-636a7ea20ec0",
+      "name": "Groq Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        208
+      ],
+      "credentials": {
+        "groqApi": {
+          "id": "1u7AQdQCCcnfzMEV",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Generate Email Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Email Content": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Generate Email Content",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "59feb543-9c5e-41fb-849f-fa978a2496f4",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3acb4fe83ed5c1ab1bd2db9cdfe17305135e3548ff33bf95da5cea4f303de20"
+  },
+  "id": "OPefy8m1l00U3ZcL",
+  "tags": []
+}
