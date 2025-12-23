@@ -6,7 +6,7 @@ Este proyecto implementa un pipeline automatizado para la gestión inteligente d
 
 ## 📊 Arquitectura del Workflow
 
-![Diagrama del Workflow]
+![Diagrama del Workflow](Captura%20de%20pantalla%202025-12-23%20175619.png)
 
 ## 🛠️ Stack Tecnológico
 * **Orquestador:** n8n (Arquitectura basada en eventos).
