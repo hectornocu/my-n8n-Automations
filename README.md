@@ -34,7 +34,7 @@ Este workflow es un sistema avanzado de gestión de correo electrónico que util
 
 ## 📊 Arquitectura del Proyecto
 
-![Diagrama del Workflow](./image_0c6b22.png)
+![Diagrama del Workflow](./emailCleanerWorkflow.png)
 
 ## 🛠️ Stack Tecnológico
 * **Orquestador:** n8n.
