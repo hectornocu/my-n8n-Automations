@@ -1,0 +1,333 @@
+{
+  "name": "Email CleanUp",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 15,
+              "triggerAtMinute": 18
+            }
+          ]
+        }
+      },
+      "id": "bcd905b0-4447-4088-afa2-91afedccb1ae",
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        944,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "id-1",
+              "name": "maxEmails",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "id-2",
+              "name": "spamThreshold",
+              "value": 0.7,
+              "type": "number"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "de4202eb-921c-4d9c-be95-a30f4b78f119",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1168,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "limit": "={{ $('Workflow Configuration').first().json.maxEmails }}",
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "id": "87be98a4-5095-4423-b790-c18f206f536a",
+      "name": "Get Emails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1392,
+        752
+      ],
+      "webhookId": "2db14be7-d1c7-466a-9834-d060a4443789",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7iVXiCjMkBPBlcu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Email Subject: {{ $json.subject }}\nFrom: {{ $json.from }}\n\nEmail ID: {{ $json.id }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "You are an email classification assistant.\n\nThe following categories are available for classification:\nWork, Personal, Food, Friends, Travels, Healthcare, Shopping\n\nYour task is to:\n1. Analyze each email to determine if it is spam or unwanted (promotional emails, job alerts from InfoJobs, newsletters you did not subscribe to, suspicious senders, etc.)\n2. For spam emails (including InfoJobs job alerts and promotional emails): Set isSpam to true, topic to null, and action to \"marked_as_spam\"\n3. For legitimate emails: Set isSpam to false, categorize into one of the topics above, and action to \"labeled\"\n\nIMPORTANT: \n- For spam emails, always set topic to null (not empty string)\n- Mark promotional emails and InfoJobs job alerts as spam\n- Be conservative with spam detection for other emails - only mark clear spam\n- Always include the emailId from the input in your response"
+        }
+      },
+      "id": "0d612684-5a02-4339-ae4a-353b666099f7",
+      "name": "Categorize and Clean Emails",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        1616,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n\t\"type\": \"object\",\n\t\"properties\": {\n\t\t\"emailId\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The email ID\"\n\t\t},\n\t\t\"isSpam\": {\n\t\t\t\"type\": \"boolean\",\n\t\t\t\"description\": \"Whether the email is spam\"\n\t\t},\n\t\t\"topic\": {\n\t\t\t\"type\": [\"string\", \"null\"],\n\t\t\t\"description\": \"The category or topic of the email (null for spam emails)\"\n\t\t},\n\t\t\"action\": {\n\t\t\t\"type\": \"string\",\n\t\t\t\"description\": \"The action taken: marked_as_spam or labeled\"\n\t\t}\n\t},\n\t\"required\": [\"emailId\", \"isSpam\", \"action\"]\n}"
+      },
+      "id": "a9176b37-2ab4-4057-8815-a4a14e29c4a0",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1760,
+        976
+      ]
+    },
+    {
+      "parameters": {
+        "model": "llama-3.3-70b-versatile",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        1632,
+        976
+      ],
+      "id": "32a61b4e-88c9-4e11-ab8c-816bd7ae026c",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "1u7AQdQCCcnfzMEV",
+          "name": "Groq account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "id-1",
+              "leftValue": "={{ $json.output.isSpam }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b307df2c-a8c6-4681-8067-4cdd8d93a2ae",
+      "name": "Is Spam?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1968,
+        752
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.output.emailId }}",
+        "labelIds": [
+          "SPAM"
+        ]
+      },
+      "id": "fce2345b-7c24-479c-aecc-51f1bb9b7ae0",
+      "name": "Move Spam to Trash",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2192,
+        656
+      ],
+      "webhookId": "fc1083a9-c375-474b-ac04-053de9ea902f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7iVXiCjMkBPBlcu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.output.emailId }}",
+        "labelIds": [
+          "={{ $json.output.labelId }}"
+        ]
+      },
+      "id": "08431225-65e4-4433-ab54-279dfb62e88b",
+      "name": "Add Category Label",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2416,
+        848
+      ],
+      "webhookId": "b0396172-e75f-4e08-a42e-261366ba4a20",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "K7iVXiCjMkBPBlcu",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const labelMap = {\n  'Work': 'Label_7808655229871756249',\n  'Personal': 'Label_4114393662065909115',\n  'Food': 'Label_1200825458064347337',\n  'Friends': 'Label_752943653301206669',\n  'Travels': 'Label_4911809534847574603',\n  'Healthcare': 'Label_8171218626420286261',\n  'Shopping': 'Label_1572317038112743369'\n};\n\nreturn $input.all().map(item => {\n  const topic = item.json.output.topic;\n  const labelId = labelMap[topic] || topic;\n  \n  return {\n    json: {\n      ...item.json,\n      output: {\n        ...item.json.output,\n        labelId: labelId\n      }\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2192,
+        848
+      ],
+      "id": "a244ea45-b075-4655-93e9-966885b7df7b",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Get Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Emails": {
+      "main": [
+        [
+          {
+            "node": "Categorize and Clean Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Categorize and Clean Emails",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Categorize and Clean Emails",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Categorize and Clean Emails": {
+      "main": [
+        [
+          {
+            "node": "Is Spam?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Spam?": {
+      "main": [
+        [
+          {
+            "node": "Move Spam to Trash",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Add Category Label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4398f07b-8f6c-40b1-b27a-8dc1d0a7b39a",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f3acb4fe83ed5c1ab1bd2db9cdfe17305135e3548ff33bf95da5cea4f303de20"
+  },
+  "id": "X0Cmf4Vc0TmwUwzq",
+  "tags": []
+}
