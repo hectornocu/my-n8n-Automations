@@ -27,5 +27,35 @@ A diferencia de automatizaciones simples, este flujo destaca por:
 * **Manejo de Variables:** Mapeo dinámico de JSON para inyectar datos del formulario directamente en la lógica del LLM.
 * **Escalabilidad:** Diseñado para integrarse fácilmente con CRMs o bases de datos de Big Data en futuras iteraciones.
 
+-----------
+## 📧 Intelligent Email Categorizer & Cleanup
+
+Este workflow es un sistema avanzado de gestión de correo electrónico que utiliza Inteligencia Artificial para auditar, clasificar y organizar la bandeja de entrada de forma autónoma.
+
+## 📊 Arquitectura del Proyecto
+
+![Diagrama del Workflow](./image_0c6b22.png)
+
+## 🛠️ Stack Tecnológico
+* **Orquestador:** n8n.
+* **IA/NLP:** Llama 3.3 70B (vía Groq) con **Structured Output Parser**.
+* **Lenguajes:** JavaScript (Node.js) para transformación de datos.
+* **Integraciones:** Gmail API con flujos de lectura/escritura.
+
+## 📝 Descripción Técnica
+A diferencia de un filtro de spam convencional, este sistema aplica una capa de razonamiento cognitivo para la toma de decisiones:
+
+1.  **Configuración de Workflow:** Utiliza un nodo de **Set** para centralizar variables globales (como el límite de correos a procesar), facilitando el mantenimiento del software.
+2.  **Extracción de Datos:** Ingesta dinámica de correos electrónicos mediante la API de Gmail.
+3.  **Clasificación Estructurada (IA):** Emplea un agente de LangChain que no solo detecta spam, sino que categoriza los correos legítimos en tópicos específicos (*Work, Personal, Healthcare*, etc.). El uso de un **Structured Output Parser** garantiza que la IA devuelva un objeto JSON válido, eliminando la variabilidad de las respuestas de texto plano.
+4.  **Lógica de Negocio (JavaScript):** Implementación de un nodo de código para realizar un mapeo (*Label Mapping*) entre las categorías semánticas de la IA y los IDs de etiquetas internos de la API de Gmail.
+5.  **Ejecución de Acciones:** Basado en un nodo condicional (**If**), el sistema decide si mover el mensaje a la papelera o etiquetarlo según su categoría.
+
+## 🚀 Valor de Ingeniería
+Este flujo demuestra habilidades avanzadas en:
+* **Manejo de JSON Estructurado:** Obligar a un LLM a seguir un esquema estricto para integración en pipelines de software.
+* **Programación Funcional:** Uso de `.map()` y *spread operators* en JavaScript para transformar el estado del flujo sin mutaciones no deseadas.
+* **Eficiencia Energética/Costes:** Uso de Groq para inferencia rápida, optimizando los tiempos de ejecución del workflow.
+
 ---
-*Este proyecto forma parte de mi portfolio como Ingeniero de Software enfocado en Automatización y Procesos de IA.*
+*Estos proyecto forma parte de mi portfolio como Ingeniero de Software enfocado en Automatización y Procesos de IA.*
